@@ -89,4 +89,8 @@
  */
 - (void)photoPickerViewControllerDidCancel:(YMSPhotoPickerViewController *)picker;
 
+- (void)photoPickerViewController:(YMSPhotoPickerViewController *)picker didSelectAlbum:(NSString *)albumTitle;
+
+- (void)photoPickerViewControllerDidUseCamera:(YMSPhotoPickerViewController *)picker;
+
 @end

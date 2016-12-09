@@ -323,6 +323,9 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
 {
     YMSAlbumPickerViewController *albumPickerViewController = [[YMSAlbumPickerViewController alloc] initWithCollectionItems:self.collectionItems selectedCollectionItem:self.currentCollectionItem dismissalHandler:^(NSDictionary *selectedCollectionItem) {
         if (![self.currentCollectionItem isEqual:selectedCollectionItem]) {
+            PHAssetCollection *collection = selectedCollectionItem[@"collection"];
+            NSString *title = [NSString stringWithFormat:@"%@", collection.localizedTitle];
+            [self.delegate photoPickerViewController:self didSelectAlbum:title];
             [self updateViewWithCollectionItem:selectedCollectionItem];
         }
         else {
@@ -404,6 +407,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         } completionHandler:^(BOOL success, NSError *error) {
             if (success) {
                 self.needToSelectFirstPhoto = YES;
+                [self.delegate photoPickerViewControllerDidUseCamera: self];
             }
 
             if (!self.allowsMultipleSelection) {
