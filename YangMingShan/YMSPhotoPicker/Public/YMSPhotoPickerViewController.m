@@ -533,8 +533,11 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         }
     };
 
-    PHFetchResult *topLevelUserCollections = [PHCollectionList fetchTopLevelUserCollectionsWithOptions:nil];
-    fetchAlbums(topLevelUserCollections);
+// Fetching user collections can cause serious delays in presenting the view controller (e.g. 10 seconds) if
+// the user has a large number of collections. Libraries imported from iPhoto can have large numbers of
+// these collections due to the "events" feature.
+//    PHFetchResult *topLevelUserCollections = [PHCollectionList fetchTopLevelUserCollectionsWithOptions:nil];
+//    fetchAlbums(topLevelUserCollections);
 
     for (PHAssetCollection *collection in smartAlbums) {
         PHFetchOptions *options = [PHFetchOptions new];
