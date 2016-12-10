@@ -89,10 +89,13 @@ static const CGFloat YMSUnhightedAnimationSpringVelocity = 6.0;
 - (void)loadPhotoWithManager:(PHImageManager *)manager forAsset:(PHAsset *)asset targetSize:(CGSize)size
 {
     self.imageManager = manager;
+    PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
+    options.networkAccessAllowed = NO;
+    options.deliveryMode = PHImageRequestOptionsDeliveryModeFastFormat;
     self.imageRequestID = [self.imageManager requestImageForAsset:asset
                                                        targetSize:size
                                                       contentMode:PHImageContentModeAspectFill
-                                                          options:nil
+                                                          options:options
                                                     resultHandler:^(UIImage *result, NSDictionary *info) {
                                                         // Set the cell's thumbnail image if it's still showing the same asset.
                                                         if ([self.representedAssetIdentifier isEqualToString:asset.localIdentifier]) {
