@@ -91,7 +91,7 @@ static const CGFloat YMSUnhightedAnimationSpringVelocity = 6.0;
     self.imageManager = manager;
     PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
     options.networkAccessAllowed = NO;
-    options.deliveryMode = PHImageRequestOptionsDeliveryModeFastFormat;
+    options.deliveryMode = PHImageRequestOptionsDeliveryModeOpportunistic;
     self.imageRequestID = [self.imageManager requestImageForAsset:asset
                                                        targetSize:size
                                                       contentMode:PHImageContentModeAspectFill

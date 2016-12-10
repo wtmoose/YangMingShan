@@ -553,8 +553,8 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         PHFetchOptions *options = [PHFetchOptions new];
         options.fetchLimit = 1000;
         options.includeAllBurstAssets = NO;
-        options.includeAssetSourceTypes = PHAssetResourceTypePhoto;
-//        options.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
+        options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
+        options.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
         options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
 
         PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:options];
