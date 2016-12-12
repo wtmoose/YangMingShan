@@ -582,6 +582,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
 
 - (void)resetState
 {
+    [self.selectedPhotos removeAllObjects];
     [self updateViewWithCollectionItem: [self.collectionItems firstObject]];
     self.photoCollectionView.contentOffset = CGPointMake(0.0, 0.0);
 }
