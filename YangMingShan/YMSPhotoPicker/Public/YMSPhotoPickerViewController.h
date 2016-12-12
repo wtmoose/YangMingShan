@@ -42,6 +42,8 @@
  */
 @property (nonatomic, assign) BOOL shouldReturnImageForSingleSelection;
 
+- (void)resetState;
+
 @end
 
 /**

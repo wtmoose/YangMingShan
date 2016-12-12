@@ -508,70 +508,82 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
 
 - (void)fetchCollections
 {
-//    PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-//    fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-
-    NSMutableArray *allAblums = [NSMutableArray array];
-
-    PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
-
-//    __block __weak void (^weakFetchAlbums)(PHFetchResult *collections);
-//    void (^fetchAlbums)(PHFetchResult *collections);
-//    weakFetchAlbums = fetchAlbums = ^void(PHFetchResult *collections) {
-//        // create fecth options
-//        PHFetchOptions *options = [PHFetchOptions new];
-//        options.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
-//        options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-//
-//        for (PHCollection *collection in collections) {
-//            if ([collection isKindOfClass:[PHAssetCollection class]]) {
-//                PHAssetCollection *assetCollection = (PHAssetCollection *)collection;
-//                PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:options];
-//                if (assetsFetchResult.count > 0) {
-//                    [allAblums addObject:@{@"collection": assetCollection
-//                                           , @"assets": assetsFetchResult}];
-//                }
-//            }
-//            else if ([collection isKindOfClass:[PHCollectionList class]]) {
-//                // If there are more sub-folders, dig into the collection to fetch the albums
-//                PHCollectionList *collectionList = (PHCollectionList *)collection;
-//                PHFetchResult *fetchResult = [PHCollectionList fetchCollectionsInCollectionList:(PHCollectionList *)collectionList options:nil];
-//                weakFetchAlbums(fetchResult);
-//            }
-//        }
-//    };
-//
-// Fetching user collections can cause serious delays in presenting the view controller (e.g. 10 seconds) if
-// the user has a large number of collections. Libraries imported from iPhoto can have large numbers of
-// these collections due to the "events" feature.
-//    PHFetchResult *topLevelUserCollections = [PHCollectionList fetchTopLevelUserCollectionsWithOptions:nil];
-//    fetchAlbums(topLevelUserCollections);
-
-    for (PHAssetCollection *collection in smartAlbums) {
-        NSArray * subtypes = @[@(PHAssetCollectionSubtypeSmartAlbumUserLibrary), @(PHAssetCollectionSubtypeSmartAlbumFavorites), @(PHAssetCollectionSubtypeSmartAlbumRecentlyAdded)];
-        if (![subtypes containsObject:@(collection.assetCollectionSubtype)]) { continue; }
-        PHFetchOptions *options = [PHFetchOptions new];
-        options.fetchLimit = 1000;
-        options.includeAllBurstAssets = NO;
-        options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
-        options.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
-        options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-
-        PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:options];
-        if (assetsFetchResult.count > 0) {
-
-            // put the "all photos" in the first index
-            if (collection.assetCollectionSubtype == PHAssetCollectionSubtypeSmartAlbumUserLibrary) {
-                [allAblums insertObject:@{@"collection": collection
-                                          , @"assets": assetsFetchResult} atIndex:0];
-            }
-            else {
-                [allAblums addObject:@{@"collection": collection
-                                       , @"assets": assetsFetchResult}];
+    dispatch_async(dispatch_get_global_queue(NSQualityOfServiceUserInteractive, 0), ^{
+        //    PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+        //    fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+        
+        NSMutableArray *allAblums = [NSMutableArray array];
+        
+        PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
+        
+        //    __block __weak void (^weakFetchAlbums)(PHFetchResult *collections);
+        //    void (^fetchAlbums)(PHFetchResult *collections);
+        //    weakFetchAlbums = fetchAlbums = ^void(PHFetchResult *collections) {
+        //        // create fecth options
+        //        PHFetchOptions *options = [PHFetchOptions new];
+        //        options.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
+        //        options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+        //
+        //        for (PHCollection *collection in collections) {
+        //            if ([collection isKindOfClass:[PHAssetCollection class]]) {
+        //                PHAssetCollection *assetCollection = (PHAssetCollection *)collection;
+        //                PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:options];
+        //                if (assetsFetchResult.count > 0) {
+        //                    [allAblums addObject:@{@"collection": assetCollection
+        //                                           , @"assets": assetsFetchResult}];
+        //                }
+        //            }
+        //            else if ([collection isKindOfClass:[PHCollectionList class]]) {
+        //                // If there are more sub-folders, dig into the collection to fetch the albums
+        //                PHCollectionList *collectionList = (PHCollectionList *)collection;
+        //                PHFetchResult *fetchResult = [PHCollectionList fetchCollectionsInCollectionList:(PHCollectionList *)collectionList options:nil];
+        //                weakFetchAlbums(fetchResult);
+        //            }
+        //        }
+        //    };
+        //
+        // Fetching user collections can cause serious delays in presenting the view controller (e.g. 10 seconds) if
+        // the user has a large number of collections. Libraries imported from iPhoto can have large numbers of
+        // these collections due to the "events" feature.
+        //    PHFetchResult *topLevelUserCollections = [PHCollectionList fetchTopLevelUserCollectionsWithOptions:nil];
+        //    fetchAlbums(topLevelUserCollections);
+        
+        for (PHAssetCollection *collection in smartAlbums) {
+//            NSArray * subtypes = @[@(PHAssetCollectionSubtypeSmartAlbumUserLibrary), @(PHAssetCollectionSubtypeSmartAlbumFavorites), @(PHAssetCollectionSubtypeSmartAlbumRecentlyAdded)];
+//            if (![subtypes containsObject:@(collection.assetCollectionSubtype)]) { continue; }
+            PHFetchOptions *options = [PHFetchOptions new];
+//            options.fetchLimit = 2000;
+            options.includeAllBurstAssets = NO;
+            options.includeHiddenAssets = NO;
+            options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
+            options.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
+            options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+            
+            PHFetchResult *assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:collection options:options];
+            if (assetsFetchResult.count > 0) {
+                
+                // put the "all photos" in the first index
+                if (collection.assetCollectionSubtype == PHAssetCollectionSubtypeSmartAlbumUserLibrary) {
+                    [allAblums insertObject:@{@"collection": collection
+                                              , @"assets": assetsFetchResult} atIndex:0];
+                }
+                else {
+                    [allAblums addObject:@{@"collection": collection
+                                           , @"assets": assetsFetchResult}];
+                }
             }
         }
-    }
-    self.collectionItems = [allAblums copy];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.collectionItems = [allAblums copy];
+            [self resetState];
+        });
+    });
+}
+
+- (void)resetState
+{
+    [self updateViewWithCollectionItem: [self.collectionItems firstObject]];
+    self.photoCollectionView.contentOffset = CGPointMake(0.0, 0.0);
 }
 
 - (void)setupCellSize
