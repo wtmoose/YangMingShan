@@ -37,7 +37,6 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint *navigationBarTopLayoutConstraint;
 @property (nonatomic, strong) NSMutableArray *selectedPhotos;
 @property (nonatomic, strong) UIBarButtonItem *doneItem;
-@property (nonatomic, assign) BOOL needToSelectFirstPhoto;
 @property (nonatomic, assign) CGSize cellPortraitSize;
 @property (nonatomic, assign) CGSize cellLandscapeSize;
 
@@ -184,6 +183,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
     if ([self.selectedPhotos containsObject:asset]) {
         NSUInteger selectionIndex = [self.selectedPhotos indexOfObject:asset];
         photoCell.selectionOrder = selectionIndex+1;
+        photoCell.selected = YES;
     }
 
     return photoCell;
@@ -380,37 +380,52 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info
 {
-    [picker dismissViewControllerAnimated:YES completion:^{
-
-        // Enable camera preview when user allow it first time
+    [picker dismissViewControllerAnimated:YES completion: nil];
+        
+    @autoreleasepool {
         if (![self.session isRunning]) {
             [self.photoCollectionView reloadItemsAtIndexPaths:@[[NSIndexPath indexPathForItem:0 inSection:0]]];
         }
-
+        
         UIImage *image = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
         if (![image isKindOfClass:[UIImage class]]) {
             return;
         }
-
+        
+        __block NSString *localIdentifier = nil;
+        
         // Save the image to Photo Album
         [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
             PHAssetCollection *collection = self.currentCollectionItem[@"collection"];
             if (collection.assetCollectionType == PHAssetCollectionTypeSmartAlbum) {
                 // Cannot save to smart albums other than "all photos", pick it and dismiss
-                [PHAssetChangeRequest creationRequestForAssetFromImage:image];
+                PHAssetChangeRequest *assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImage:image];
+                PHObjectPlaceholder *placeholder = [assetRequest placeholderForCreatedAsset];
+                localIdentifier = placeholder.localIdentifier;
             }
             else {
                 PHAssetChangeRequest *assetRequest = [PHAssetChangeRequest creationRequestForAssetFromImage:image];
                 PHObjectPlaceholder *placeholder = [assetRequest placeholderForCreatedAsset];
+                localIdentifier = placeholder.localIdentifier;
                 PHAssetCollectionChangeRequest *albumChangeRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:collection assets:self.currentCollectionItem[@"assets"]];
                 [albumChangeRequest addAssets:@[placeholder]];
             }
         } completionHandler:^(BOOL success, NSError *error) {
-            if (success) {
-                self.needToSelectFirstPhoto = YES;
-                [self.delegate photoPickerViewControllerDidUseCamera: self];
+            if (!success) { return; }
+            [self.delegate photoPickerViewControllerDidUseCamera: self];
+            
+            if (self.canAddPhoto) {
+                // Select the asset we just added
+                PHFetchResult *fetch = [PHAsset fetchAssetsWithLocalIdentifiers:@[localIdentifier] options:nil];
+                PHAsset *asset = fetch.firstObject;
+                if (asset != nil) {
+                    [self.selectedPhotos addObject:asset];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        self.doneItem.enabled = YES;
+                    });
+                }
             }
-
+            
             if (!self.allowsMultipleSelection) {
                 if ([self.delegate respondsToSelector:@selector(photoPickerViewController:didFinishPickingImage:)]) {
                     [self.delegate photoPickerViewController:self didFinishPickingImage:image];
@@ -420,7 +435,8 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
                 }
             }
         }];
-    }];
+    }
+
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
@@ -575,7 +591,6 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         }
         dispatch_async(dispatch_get_main_queue(), ^{
             self.collectionItems = [allAblums copy];
-            [self resetState];
         });
     });
 }
@@ -623,18 +638,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
     
     PHFetchResultChangeDetails *collectionChanges = [changeInstance changeDetailsForFetchResult:fetchResult];
     if (collectionChanges == nil) {
-
         [self fetchCollections];
-
-        if (self.needToSelectFirstPhoto) {
-            self.needToSelectFirstPhoto = NO;
-
-            fetchResult = [self.collectionItems firstObject][@"assets"];
-            PHAsset *asset = [fetchResult firstObject];
-            [self.selectedPhotos addObject:asset];
-            self.doneItem.enabled = YES;
-        }
-
         return;
     }
     
@@ -693,28 +697,13 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
                 [changedIndexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
                     NSIndexPath *indexPath = [NSIndexPath indexPathForItem:idx inSection:0];
                     if (![removeIndexPaths containsObject:indexPath]) {
-                        // In case reload selected cell, they were didSelected and re-select. Ignore them to prevent weird transition.
-                        if (self.needToSelectFirstPhoto) {
-                            if (![collectionView.indexPathsForSelectedItems containsObject:indexPath]) {
-                                [changedIndexPaths addObject:indexPath];
-                            }
-                        }
-                        else {
-                            [changedIndexPaths addObject:indexPath];
-                        }
+                        [changedIndexPaths addObject:indexPath];
                     }
                 }];
                 if ([changedIndexes count] > 0) {
                     [collectionView reloadItemsAtIndexPaths:changedIndexPaths];
                 }
             } completion:^(BOOL finished) {
-                if (self.needToSelectFirstPhoto) {
-                    self.needToSelectFirstPhoto = NO;
-
-                    PHAsset *asset = [fetchResult firstObject];
-                    [self.selectedPhotos addObject:asset];
-                    self.doneItem.enabled = YES;
-                }
                 [self refreshPhotoSelection];
             }];
         }
