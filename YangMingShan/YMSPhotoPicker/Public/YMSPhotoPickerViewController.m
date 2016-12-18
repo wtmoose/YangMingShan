@@ -224,6 +224,9 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
             PHAsset *asset = fetchResult[indexPath.item-1];
             [self.selectedPhotos addObject:asset];
             [self finishPickingPhotos:nil];
+            if (asset && [self.delegate respondsToSelector:@selector(photoPickerViewController:didSelectAsset:)]) {
+                [self.delegate photoPickerViewController:self didSelectAsset:asset];
+            }
         } else {
             PHFetchResult *fetchResult = self.currentCollectionItem[@"assets"];
             PHAsset *asset = fetchResult[indexPath.item-1];
@@ -251,6 +254,9 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         PHAsset *asset = fetchResult[indexPath.item-1];
         [self.selectedPhotos addObject:asset];
         self.doneItem.enabled = YES;
+        if (asset && [self.delegate respondsToSelector:@selector(photoPickerViewController:didSelectAsset:)]) {
+            [self.delegate photoPickerViewController:self didSelectAsset:asset];
+        }
     }
 }
 

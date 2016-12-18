@@ -95,4 +95,6 @@
 
 - (void)photoPickerViewControllerDidUseCamera:(YMSPhotoPickerViewController *)picker;
 
+- (void)photoPickerViewController:(YMSPhotoPickerViewController *)picker didSelectAsset:(PHAsset *)asset;
+
 @end
