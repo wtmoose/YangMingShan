@@ -66,6 +66,18 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
     return self;
 }
 
+- (void)selectPhoto:(PHAsset *)asset
+{
+    if (![self.selectedPhotos containsObject:asset]) {
+        [self.selectedPhotos addObject:asset];
+    }
+}
+
+- (void)deselectPhoto:(PHAsset *)asset
+{
+    [self.selectedPhotos removeObject:asset];
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -222,7 +234,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         if (NO == self.shouldReturnImageForSingleSelection) {
             PHFetchResult *fetchResult = self.currentCollectionItem[@"assets"];
             PHAsset *asset = fetchResult[indexPath.item-1];
-            [self.selectedPhotos addObject:asset];
+            [self selectPhoto:asset];
             [self finishPickingPhotos:nil];
             if (asset && [self.delegate respondsToSelector:@selector(photoPickerViewController:didSelectAsset:)]) {
                 [self.delegate photoPickerViewController:self didSelectAsset:asset];
@@ -252,7 +264,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
     else {
         PHFetchResult *fetchResult = self.currentCollectionItem[@"assets"];
         PHAsset *asset = fetchResult[indexPath.item-1];
-        [self.selectedPhotos addObject:asset];
+        [self selectPhoto:asset];
         self.doneItem.enabled = YES;
         if (asset && [self.delegate respondsToSelector:@selector(photoPickerViewController:didSelectAsset:)]) {
             [self.delegate photoPickerViewController:self didSelectAsset:asset];
@@ -294,7 +306,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         cell.selectionOrder = cell.selectionOrder-1;
     }
 
-    [self.selectedPhotos removeObject:asset];
+    [self deselectPhoto:asset];
     if (self.selectedPhotos.count == 0) {
         self.doneItem.enabled = NO;
     }
@@ -425,7 +437,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
                 PHFetchResult *fetch = [PHAsset fetchAssetsWithLocalIdentifiers:@[localIdentifier] options:nil];
                 PHAsset *asset = fetch.firstObject;
                 if (asset != nil) {
-                    [self.selectedPhotos addObject:asset];
+                    [self selectPhoto:asset];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         self.doneItem.enabled = YES;
                     });
@@ -597,7 +609,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         }
         dispatch_async(dispatch_get_main_queue(), ^{
             self.collectionItems = [allAblums copy];
-            if (self.currentCollectionItem != nil && [self.collectionItems containsObject:self.currentCollectionItem]) {
+            if (self.currentCollectionItem != nil) {
                 [self refreshPhotoSelection];
             } else {
                 [self resetState];
