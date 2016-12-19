@@ -162,7 +162,7 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         if (![self.session isRunning]) {
             [self.session startRunning];
         }
-        
+        [cameraCell setNeedsLayout];
         return cameraCell;
     }    
     
@@ -597,6 +597,11 @@ static const CGFloat YMSPhotoFetchScaleResizingRatio = 0.75;
         }
         dispatch_async(dispatch_get_main_queue(), ^{
             self.collectionItems = [allAblums copy];
+            if (self.currentCollectionItem != nil && [self.collectionItems containsObject:self.currentCollectionItem]) {
+                [self refreshPhotoSelection];
+            } else {
+                [self resetState];
+            }
         });
     });
 }
